@@ -1,1 +1,1 @@
-export {CalendarComponent} from './calendar';
+export * from './calendar.module';

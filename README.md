@@ -9,24 +9,43 @@ https://twinssbc.github.io/Ionic2-Calendar/demo/
 
 Install: `npm install ionic2-calendar --save`
 
-Import the ionic2-calendar component for your page and add it to your page's directives.:
+Import the ionic2-calendar module:
 
 ```
-import {CalendarComponent} from 'ionic2-calendar/ionic2-calendar'
+import { NgModule } from '@angular/core';
+import { IonicApp, IonicModule } from 'ionic-angular';
+import { MyApp } from './app/app.component';
+import { NgCalendarModule  } from 'ionic2-calendar';
 
-@Component({
-    templateUrl: 'build/pages/home/home.html',
-    directives: [CalendarComponent]
+
+@NgModule({
+    declarations: [
+        MyApp
+    ],
+    imports: [
+        NgCalendarModule,
+        IonicModule.forRoot(MyApp)
+    ],
+    bootstrap: [IonicApp],
+    entryComponents: [
+        MyApp
+    ]
 })
-export class HomePage {}
+export class AppModule {}
 ```
 
 Add the directive in the html page
 
-      <calendar [eventSource]="eventSource" [calendarMode]="calendar.mode" [(currentDate)]="calendar.currentDate"
-                (onRangeChanged)="reloadSource(startTime, endTime)"
-                (onEventSelected)="onEventSelected($event)" (onTitleChanged)="onViewTitleChanged($event)"
-                (onTimeSelected)="onTimeSelected($event)" step="30"></calendar>
+      <calendar [eventSource]="eventSource"
+        [calendarMode]="calendar.mode"
+        [currentDate]="calendar.currentDate"
+        (onCurrectDateChanged)="onCurrentDateChanged($event)"
+        (onRangeChanged)="reloadSource(startTime, endTime)"
+        (onEventSelected)="onEventSelected($event)"
+        (onTitleChanged)="onViewTitleChanged($event)"
+        (onTimeSelected)="onTimeSelected($event)"
+        step="30">
+      </calendar>
 
 
 # Options
@@ -46,7 +65,7 @@ Default value: 'MMMM yyyy, Week w'
 * formatMonthTitle    
 The format of the title displayed in the month view.    
 Default value: 'MMMM yyyy'
-* formatWeekViewDayHeader
+* formatWeekViewDayHeader    
 The format of the header displayed in the week view.    
 Default value: 'EEE d'
 * formatHourColumn    
@@ -80,17 +99,26 @@ If queryMode is set to 'remote', when the range or mode is changed, the calendar
 Users will need to implement their custom loading data logic in this function, and fill it into the eventSource. The eventSource is watched, so the view will be updated once the eventSource is changed.    
 Default value: 'local'
 * step    
-It can be set to 15 or 30, so that the event can be displayed at more accurate position in weekview or dayview.
+It can be set to 15 or 30, so that the event can be displayed at more accurate position in weekview or dayview.    
+Default value: 60
+* onCurrentDateChanged    
+The callback function triggered when the date that is currently viewed changes.
+
+        <calendar ... (onCurrentDateChanged)="onCurrentDateChanged($event)"></calendar>
+
+        onCurrentChanged = (ev: Date) => {
+            console.log('Currently viewed date: ' + ev);
+        };
+
 * onRangeChanged    
 The callback function triggered when the range or mode is changed if the queryMode is set to 'remote'    
 The ev parameter contains two fields, startTime and endTime.
 
         <calendar ... (onRangeChanged)="onRangeChanged($event)"></calendar>
 
-        onRangeChanged = function (ev) {
-            var me = this;
-            Events.query({startTime: ev.startTime, endTime: ev.endTime}, function(events){
-                me.eventSource=events;
+        onRangeChanged = (ev: { startTime: Date, endTime: Date }) => {
+            Events.query(ev, (events) => {
+                this.eventSource = events;
             });
         };
 
@@ -99,7 +127,7 @@ The callback function triggered when an event is clicked
 
         <calendar ... (onEventSelected)="onEventSelected($event)"></calendar>
 
-        onEventSelected = function (event) {
+        onEventSelected = (event) => {
             console.log(event.title);
         };
 
@@ -108,8 +136,8 @@ The callback function triggered when a date is selected in the monthview.
 The ev parameter contains two fields, selectedTime and events, if there's no event at the selected time, the events field will be either undefined or empty array
 
         <calendar ... (onTimeSelected)="onTimeSelected($event)"></calendar>
-        
-        onTimeSelected = function (ev) {
+
+        onTimeSelected = (ev: { selectedTime: Date, events: any[] }) => {
             console.log('Selected time: ' + ev.selectedTime + ', hasEvents: ' + (ev.events !== undefined && ev.events.length !== 0));
         };
 
@@ -117,8 +145,8 @@ The ev parameter contains two fields, selectedTime and events, if there's no eve
 The callback function triggered when the view title is changed
 
         <calendar ... (onTitleChanged)="onViewTitleChanged($event)”></calendar>
-        
-        onViewTitleChanged = function (title) {
+
+        onViewTitleChanged = (title: string) => {
             this.viewTitle = title;
         };
 
@@ -142,8 +170,8 @@ For example, if an allDay event ending to 2014-05-10, then endTime is
 * allDay    
 Indicates the event is allDay event or regular event
 
-# Known issue
-This component updates the ion-slide dynamically so that only 3 looped slides are needed.
-The ion-slide in Ionic2 uses Swiper. It seems in the Swiper implementation, the next slide after the end of looped slide is a separate cached slide, instead of the first slide.
-I can't find out a way to force refresh that cached slide, so you will notice that when sliding from the third month to the forth month, the preview month is not the forth month, but the first month.
+# Known issue    
+This component updates the ion-slide dynamically so that only 3 looped slides are needed.    
+The ion-slide in Ionic2 uses Swiper. It seems in the Swiper implementation, the next slide after the end of looped slide is a separate cached slide, instead of the first slide.    
+I can't find out a way to force refresh that cached slide, so you will notice that when sliding from the third month to the forth month, the preview month is not the forth month, but the first month.    
 Once the sliding is over, the slide will be forced to render the forth month.
